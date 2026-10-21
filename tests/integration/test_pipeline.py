@@ -54,6 +54,8 @@ def test_impossible_gate_marks_candidate_ineligible(cfg: ModelConfig, tmp_path: 
     failures = _run(strict, tmp_path)
     assert failures and "roc_auc" in failures[0]
     assert json.loads((tmp_path / "reports" / "metrics.json").read_text())["eligible"] is False
+    report = (tmp_path / "reports" / "report.md").read_text()
+    assert "**Candidate verdict: INELIGIBLE**\n\n- roc_auc" in report
 
 
 def test_invalid_data_stops_before_training(cfg: ModelConfig, tmp_path: Path) -> None:

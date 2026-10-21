@@ -66,8 +66,12 @@ def load_csv(path: Path) -> pd.DataFrame:
 
 
 def fingerprint(df: pd.DataFrame) -> str:
-    """SHA-256 over the canonical CSV bytes: sensitive to values, order and columns."""
-    return hashlib.sha256(df.to_csv(index=False).encode("utf-8")).hexdigest()
+    """SHA-256 over the canonical CSV bytes: sensitive to values, order and columns.
+
+    Line endings are forced to LF; pandas otherwise uses the OS default and the hash would differ
+    between Windows and Linux.
+    """
+    return hashlib.sha256(df.to_csv(index=False, lineterminator="\n").encode("utf-8")).hexdigest()
 
 
 def build_provenance(df: pd.DataFrame, cfg: DataConfig) -> dict[str, Any]:
@@ -95,7 +99,7 @@ def ingest(cfg: DataConfig, out_dir: Path) -> pd.DataFrame:
         assert cfg.csv_path is not None  # guaranteed by DataConfig validation
         df = load_csv(cfg.csv_path)
     out_dir.mkdir(parents=True, exist_ok=True)
-    df.to_csv(out_dir / "raw.csv", index=False)
+    df.to_csv(out_dir / "raw.csv", index=False, lineterminator="\n")
     prov = build_provenance(df, cfg)
     (out_dir / "provenance.json").write_text(json.dumps(prov, indent=2), encoding="utf-8")
     log.info("ingested %d rows, fingerprint %s", len(df), prov["fingerprint_sha256"][:12])

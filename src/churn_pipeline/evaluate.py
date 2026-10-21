@@ -73,9 +73,8 @@ def render_report(
         return "n/a" if v is None else f"{v:.3f}"
 
     rows = "\n".join(f"| {k} | {fmt(baseline[k])} | {fmt(candidate[k])} |" for k in keys)
-    verdict = (
-        "ELIGIBLE" if not failures else "INELIGIBLE\n\n" + "\n".join(f"- {f}" for f in failures)
-    )
+    verdict = "ELIGIBLE" if not failures else "INELIGIBLE"
+    reasons = "".join(f"\n- {f}" for f in failures)
     return (
         "# Evaluation report\n\n"
         f"Dataset fingerprint: `{provenance['fingerprint_sha256']}` "
@@ -86,7 +85,7 @@ def render_report(
         f"Decision threshold for precision/recall/F1: {threshold}.\n\n"
         "| metric | baseline | candidate |\n|---|---|---|\n"
         f"{rows}\n\n"
-        f"**Candidate verdict: {verdict}**\n"
+        f"**Candidate verdict: {verdict}**\n{reasons}\n"
     )
 
 

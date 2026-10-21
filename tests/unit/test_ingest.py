@@ -29,6 +29,12 @@ def test_generator_is_deterministic() -> None:
     assert fingerprint(a) != fingerprint(generate_synthetic(200, 4))
 
 
+def test_fingerprint_is_pinned_across_operating_systems() -> None:
+    # Same value on Windows, Linux and in Docker; changes only if the generator or hashing changes.
+    pinned = "ac72783d014ada5f7b692124eefb0d22b41a0702451790e2778f93e5d28f3428"
+    assert fingerprint(generate_synthetic(50, 1)) == pinned
+
+
 def test_generated_data_is_valid_and_has_both_classes() -> None:
     df = validate(generate_synthetic(5000, 42))
     assert 0.1 < df["churn"].mean() < 0.6
