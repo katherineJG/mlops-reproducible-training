@@ -1,0 +1,16 @@
+seed: 42
+test_size: 0.2            # stratified random split; the data has no time column
+decision_threshold: 0.5
+baseline:
+  type: dummy_prior
+candidate:
+  type: logistic_regression
+  params:
+    C: 1.0
+    max_iter: 1000
+    class_weight: balanced
+gates:                    # candidate is ineligible if any gate fails
+  min_roc_auc: 0.70
+  min_pr_auc: 0.40
+  min_recall: 0.50
+  min_roc_auc_lift_over_baseline: 0.05

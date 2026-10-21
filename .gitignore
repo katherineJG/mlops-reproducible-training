@@ -1,0 +1,16 @@
+.venv/
+__pycache__/
+*.pyc
+.mypy_cache/
+.ruff_cache/
+.pytest_cache/
+mlruns/
+mlflow.db
+# generated artifacts (tracked by DVC, not Git)
+/data/raw/
+/data/processed/
+/models/
+# private data: never commit (e.g. the IBM Telco CSV used for private functionality checks)
+/data/private/
+*.env
+.env*
