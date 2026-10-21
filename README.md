@@ -15,7 +15,11 @@ make check       # ruff + mypy + pytest (or run the `uv run ...` lines in the Ma
 ```bash
 uv run python -m churn_pipeline.ingest                       # writes data/raw/raw.csv + provenance.json
 uv run python -m churn_pipeline.validate data/raw/raw.csv    # exit 1 + named rules on bad data
+uv run python -m churn_pipeline.train                        # fit baseline + candidate, apply gates
 ```
+
+`train` writes `models/` and `reports/` (git-ignored). Exit code 2 means the candidate failed an
+evaluation gate in `configs/model.yaml`; the report still lists which gate failed.
 
 `data/sample/churn_sample.csv` is a small committed synthetic fixture (200 rows, seed 42) used by tests.
 
@@ -24,7 +28,3 @@ uv run python -m churn_pipeline.validate data/raw/raw.csv    # exit 1 + named ru
 Default data is a seeded synthetic generator (added in M1). No third-party dataset is committed.
 The IBM Telco churn CSV has no confirmed license, so it is only ever used locally and privately
 (`data/private/`, git-ignored).
-
-```bash
-uv run python -m churn_pipeline.train   # split, fit baseline + candidate, gate; writes models/ and reports/ (exit 2 = candidate ineligible)
-```
