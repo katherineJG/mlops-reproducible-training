@@ -1,3 +1,5 @@
+from collections.abc import Callable
+
 import numpy as np
 import pandas as pd
 import pytest
@@ -14,6 +16,23 @@ def df() -> pd.DataFrame:
 def test_valid_data_passes_unchanged(df: pd.DataFrame) -> None:
     before = df.copy()
     pd.testing.assert_frame_equal(validate(df), before)
+
+
+@pytest.mark.parametrize(
+    ("mutate", "expected"),
+    [
+        (lambda d: d.drop(columns="partner"), "required column is missing"),
+        (lambda d: d.assign(surprise=1), "unexpected extra column"),
+        (lambda d: d.assign(tenure_months=d["tenure_months"].astype(float)), "wrong data type"),
+        (lambda d: d.assign(gender=["other"] + list(d["gender"][1:])), "not one of the allowed"),
+        (lambda d: d.assign(monthly_charges=[-1.0] + list(d["monthly_charges"][1:])), ">= 0|range"),
+    ],
+)
+def test_errors_explain_the_rule_in_plain_english(
+    df: pd.DataFrame, mutate: Callable[[pd.DataFrame], pd.DataFrame], expected: str
+) -> None:
+    with pytest.raises(DataValidationError, match=expected):
+        validate(mutate(df))
 
 
 def test_empty_data_fails() -> None:

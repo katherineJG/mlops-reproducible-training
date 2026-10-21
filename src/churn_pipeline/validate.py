@@ -2,6 +2,7 @@
 
 import argparse
 import logging
+import re
 import sys
 from pathlib import Path
 
@@ -55,6 +56,28 @@ SCHEMA = pa.DataFrameSchema(
 )
 
 
+_EXPLANATIONS = [
+    (r"^isin\((.*)\)$", "value is not one of the allowed values {0}"),
+    (r"^in_range\((.*)\)$", "value is outside the allowed range ({0})"),
+    (r"^greater_than_or_equal_to\((.*)\)$", "value must be >= {0}"),
+    (r"^dtype\((.*)\)$", "column has the wrong data type, expected {0}"),
+    (r"^not_nullable$", "missing values are not allowed in this column"),
+    (r"^column_in_dataframe$", "required column is missing from the data"),
+    (r"^column_in_schema$", "column is not part of the contract (unexpected extra column)"),
+    (r"^customer_id_unique$", "customer_id must be unique"),
+    (r"^no_charges_before_first_month$", "tenure is 0 months but total charges are above 0"),
+    (r"^no_duplicate_rows_ignoring_id$", "row duplicates another row apart from customer_id"),
+]
+
+
+def _explain(check: str) -> str:
+    """Plain-English meaning of a Pandera check name; falls back to the name itself."""
+    for pattern, text in _EXPLANATIONS:
+        if m := re.match(pattern, check):
+            return text.format(*m.groups())
+    return check
+
+
 def validate(df: pd.DataFrame) -> pd.DataFrame:
     """Return df unchanged if valid; otherwise raise DataValidationError naming each failed rule."""
     if df.empty:
@@ -65,7 +88,7 @@ def validate(df: pd.DataFrame) -> pd.DataFrame:
         fails = exc.failure_cases
         lines = [
             f"rule {row.check!s} on column {row.column!s}: "
-            f"{row.failure_case!s} (row index {row.index!s})"
+            f"{row.failure_case!s} (row index {row.index!s}) -> {_explain(str(row.check))}"
             for row in fails.head(20).itertuples()
         ]
         more = len(fails) - len(lines)

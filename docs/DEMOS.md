@@ -9,15 +9,15 @@ A copy of `data/raw/raw.csv` was edited: row 3 `monthly_charges = -20`, row 7 `c
 ```text
 $ python -m churn_pipeline.validate bad.csv
 ERROR __main__: 4 contract violation(s):
-rule customer_id_unique on column customer_id: C000008 (row index 8)
-rule customer_id_unique on column customer_id: C000008 (row index 9)
-rule in_range(0, 500) on column monthly_charges: -20.0 (row index 3)
-rule isin([0, 1]) on column churn: 2 (row index 7)
+rule customer_id_unique on column customer_id: C000008 (row index 8) -> customer_id must be unique
+rule customer_id_unique on column customer_id: C000008 (row index 9) -> customer_id must be unique
+rule in_range(0, 500) on column monthly_charges: -20.0 (row index 3) -> value is outside the allowed range (0, 500)
+rule isin([0, 1]) on column churn: 2 (row index 7) -> value is not one of the allowed values [0, 1]
 exit code 1
 ```
 
 With the `partner` column removed as well, the first line becomes
-`rule column_in_dataframe on column None: partner (row index None)`. Training never starts on invalid data
+`rule column_in_dataframe on column None: partner (row index None) -> required column is missing from the data`. Training never starts on invalid data
 (`test_invalid_data_stops_before_training`).
 
 ## 2. Rejected candidate

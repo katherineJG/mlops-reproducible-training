@@ -19,3 +19,6 @@ jobs:
       - run: |
           git diff --exit-code reports/metrics.json
           test "$(git diff -U0 dvc.lock | grep -cE '^[+-] +md5')" -le 2
+      - run: docker build -t churn-pipeline:ci .
+      # exit code 0 only if ingest, validation, training and the evaluation gates all pass
+      - run: docker run --rm churn-pipeline:ci
