@@ -14,3 +14,5 @@ jobs:
       - run: uv sync --locked
       - run: make check
       - run: uv run dvc repro
+      # Linux must reproduce the committed (Windows-generated) hashes and metrics
+      - run: git diff --exit-code dvc.lock reports/metrics.json
