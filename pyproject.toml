@@ -35,6 +35,10 @@ python_version = "3.12"
 strict = true
 plugins = ["pandera.mypy"]
 
+[[tool.mypy.overrides]]
+module = ["sklearn.*", "joblib.*"]
+ignore_missing_imports = true
+
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 markers = ["integration: end-to-end pipeline tests"]

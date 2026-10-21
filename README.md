@@ -24,3 +24,7 @@ uv run python -m churn_pipeline.validate data/raw/raw.csv    # exit 1 + named ru
 Default data is a seeded synthetic generator (added in M1). No third-party dataset is committed.
 The IBM Telco churn CSV has no confirmed license, so it is only ever used locally and privately
 (`data/private/`, git-ignored).
+
+```bash
+uv run python -m churn_pipeline.train   # split, fit baseline + candidate, gate; writes models/ and reports/ (exit 2 = candidate ineligible)
+```

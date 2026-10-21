@@ -14,3 +14,5 @@ mlflow.db
 /data/private/
 *.env
 .env*
+/reports/*
+!/reports/.gitkeep
