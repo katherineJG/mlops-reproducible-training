@@ -73,7 +73,7 @@ def run(
         provenance,
     )
     (reports_dir / "split.json").write_text(
-        json.dumps({"test_ids": sorted(test[id_column])}), encoding="utf-8"
+        json.dumps({"test_ids": sorted(test[id_column])}), encoding="utf-8", newline="\n"
     )
     return failures
 

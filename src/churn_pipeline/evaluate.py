@@ -106,7 +106,12 @@ def write_outputs(
         "gate_failures": failures,
         "decision_threshold": threshold,
     }
-    (out_dir / "metrics.json").write_text(json.dumps(payload, indent=2), encoding="utf-8")
+    # newline="\n": Windows would otherwise write CRLF and change the bytes DVC hashes.
+    (out_dir / "metrics.json").write_text(
+        json.dumps(payload, indent=2), encoding="utf-8", newline="\n"
+    )
     (out_dir / "report.md").write_text(
-        render_report(baseline, candidate, failures, threshold, provenance), encoding="utf-8"
+        render_report(baseline, candidate, failures, threshold, provenance),
+        encoding="utf-8",
+        newline="\n",
     )

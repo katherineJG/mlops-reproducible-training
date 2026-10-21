@@ -101,7 +101,9 @@ def ingest(cfg: DataConfig, out_dir: Path) -> pd.DataFrame:
     out_dir.mkdir(parents=True, exist_ok=True)
     df.to_csv(out_dir / "raw.csv", index=False, lineterminator="\n")
     prov = build_provenance(df, cfg)
-    (out_dir / "provenance.json").write_text(json.dumps(prov, indent=2), encoding="utf-8")
+    (out_dir / "provenance.json").write_text(
+        json.dumps(prov, indent=2), encoding="utf-8", newline="\n"
+    )
     log.info("ingested %d rows, fingerprint %s", len(df), prov["fingerprint_sha256"][:12])
     return df
 

@@ -10,8 +10,8 @@ stages:
       size: 2176
     - path: src/churn_pipeline/ingest.py
       hash: md5
-      md5: ce0494e49fddcf98e1e586a0df11ba3e
-      size: 4565
+      md5: 52fc5e599ca5d15b153e708c17ec8d6b
+      size: 4593
     params:
       configs/data.yaml:
         csv_path:
@@ -24,22 +24,22 @@ stages:
     outs:
     - path: data/raw
       hash: md5
-      md5: bbfeb971f18e3d0e4da66d52aed9f32c.dir
-      size: 355453
+      md5: e443e810e9491c1c973a00b152786339.dir
+      size: 355433
       nfiles: 2
   train:
     cmd: uv run python -m churn_pipeline.train
     deps:
     - path: data/raw
       hash: md5
-      md5: bbfeb971f18e3d0e4da66d52aed9f32c.dir
-      size: 355453
+      md5: e443e810e9491c1c973a00b152786339.dir
+      size: 355433
       nfiles: 2
     - path: src/churn_pipeline
       hash: md5
-      md5: 7bfbb584f59b513209820cf3fbcf78f9.dir
-      size: 63039
-      nfiles: 16
+      md5: d018703acae2058073bf43c17d9355f7.dir
+      size: 23991
+      nfiles: 8
     params:
       configs/data.yaml:
         csv_path:
@@ -74,12 +74,12 @@ stages:
       nfiles: 2
     - path: reports/metrics.json
       hash: md5
-      md5: bea742f16d063a9d286d741f17466be5
-      size: 457
+      md5: b715b85ae4b6d5a1cb6ff6209a9d6747
+      size: 437
     - path: reports/report.md
       hash: md5
-      md5: 9c3c7a58996dd1bd3024f46143bb9962
-      size: 570
+      md5: 5e7bf40338daaff0b968570fb2b0ab6e
+      size: 552
     - path: reports/split.json
       hash: md5
       md5: 4eba194067b5400463ecaedeaf8d68b3
