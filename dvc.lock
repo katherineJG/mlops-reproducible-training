@@ -37,8 +37,8 @@ stages:
       nfiles: 2
     - path: src/churn_pipeline
       hash: md5
-      md5: d018703acae2058073bf43c17d9355f7.dir
-      size: 23991
+      md5: 6193501cea4c91446e71f5d6ac75c4a7.dir
+      size: 25099
       nfiles: 8
     params:
       configs/data.yaml:

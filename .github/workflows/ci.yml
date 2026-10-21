@@ -18,7 +18,12 @@ jobs:
       # except the pickled models' (one md5 line changed = 2 diff lines: observed not byte-stable).
       - run: |
           git diff --exit-code reports/metrics.json
-          test "$(git diff -U0 dvc.lock | grep -cE '^[+-] +md5')" -le 2
+          changed=$(git diff -U0 dvc.lock | grep -cE '^[+-] +md5' || true)
+          if [ "$changed" -gt 2 ]; then
+            echo "::error::dvc.lock is stale or not reproducible. After changing code or configs, run 'uv run dvc repro' and commit dvc.lock."
+            git diff -U0 dvc.lock
+            exit 1
+          fi
       - run: docker build -t churn-pipeline:ci .
       # exit code 0 only if ingest, validation, training and the evaluation gates all pass
       - run: docker run --rm churn-pipeline:ci
