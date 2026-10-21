@@ -18,7 +18,23 @@ uv run python -m churn_pipeline.validate data/raw/raw.csv    # exit 1 + named ru
 uv run python -m churn_pipeline.train                        # fit baseline + candidate, apply gates
 ```
 
-`train` writes `models/` and `reports/` (git-ignored). Exit code 2 means the candidate failed an
+Or run the whole versioned pipeline with DVC (skips unchanged stages):
+
+```bash
+uv run dvc repro
+```
+
+## Experiment tracking (MLflow)
+
+Each `train` run logs params, baseline/candidate metrics, git SHA (+ dirty flag), dataset fingerprint,
+configs, reports, provenance, a pip freeze, and (only if the candidate passes its gates) the model.
+The default backend is local SQLite (`mlflow.db`, git-ignored). To browse runs:
+
+```bash
+uv run python -m mlflow ui --backend-store-uri sqlite:///mlflow.db   # http://127.0.0.1:5000
+```
+
+`train` writes `models/` and `reports/` (DVC-tracked, not in Git). Exit code 2 means the candidate failed an
 evaluation gate in `configs/model.yaml`; the report still lists which gate failed.
 
 `data/sample/churn_sample.csv` is a small committed synthetic fixture (200 rows, seed 42) used by tests.

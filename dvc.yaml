@@ -1,0 +1,26 @@
+﻿stages:
+  ingest:
+    cmd: uv run python -m churn_pipeline.ingest --config configs/data.yaml --out data/raw
+    deps:
+      - src/churn_pipeline/ingest.py
+      - src/churn_pipeline/config.py
+    params:
+      - configs/data.yaml:
+    outs:
+      - data/raw
+
+  train:
+    cmd: uv run python -m churn_pipeline.train
+    deps:
+      - data/raw
+      - src/churn_pipeline
+    params:
+      - configs/data.yaml:
+      - configs/model.yaml:
+    outs:
+      - models
+      - reports/report.md
+      - reports/split.json
+    metrics:
+      - reports/metrics.json:
+          cache: false

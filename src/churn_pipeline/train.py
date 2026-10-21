@@ -19,6 +19,7 @@ from sklearn.pipeline import Pipeline
 from churn_pipeline.config import ModelConfig, load_data_config, load_model_config
 from churn_pipeline.evaluate import check_gates, compute_metrics, write_outputs
 from churn_pipeline.features import FEATURES, build_pipeline
+from churn_pipeline.tracking import log_run
 from churn_pipeline.validate import DataValidationError, validate
 
 log = logging.getLogger(__name__)
@@ -84,14 +85,17 @@ def main() -> None:
     parser.add_argument("--raw", type=Path, default=Path("data/raw"))
     parser.add_argument("--models", type=Path, default=Path("models"))
     parser.add_argument("--reports", type=Path, default=Path("reports"))
+    parser.add_argument("--tracking-uri", default="sqlite:///mlflow.db")
+    parser.add_argument("--experiment", default="churn-training")
     args = parser.parse_args()
     logging.basicConfig(level=logging.INFO, format="%(levelname)s %(name)s: %(message)s")
     data_cfg = load_data_config(args.data_config)
+    model_cfg = load_model_config(args.model_config)
     provenance = json.loads((args.raw / "provenance.json").read_text(encoding="utf-8"))
     try:
         failures = run(
             pd.read_csv(args.raw / "raw.csv"),
-            load_model_config(args.model_config),
+            model_cfg,
             data_cfg.target,
             data_cfg.id_column,
             provenance,
@@ -101,6 +105,21 @@ def main() -> None:
     except DataValidationError as exc:
         log.error("%s", exc)
         sys.exit(1)
+    results = json.loads((args.reports / "metrics.json").read_text(encoding="utf-8"))
+    run_id = log_run(
+        args.tracking_uri,
+        args.experiment,
+        data_cfg,
+        model_cfg,
+        provenance,
+        results["baseline"],
+        results["candidate"],
+        failures,
+        args.models,
+        args.reports,
+        [args.data_config, args.model_config],
+    )
+    log.info("MLflow run %s logged to %s", run_id, args.tracking_uri)
     if failures:
         log.error("candidate INELIGIBLE: %s", "; ".join(failures))
         sys.exit(2)

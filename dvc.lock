@@ -1,0 +1,86 @@
+schema: '2.0'
+stages:
+  ingest:
+    cmd: uv run python -m churn_pipeline.ingest --config configs/data.yaml --out
+      data/raw
+    deps:
+    - path: src/churn_pipeline/config.py
+      hash: md5
+      md5: eda6fbcd64fa7fb6da2d47b3e9186226
+      size: 2176
+    - path: src/churn_pipeline/ingest.py
+      hash: md5
+      md5: 8c9d843552975370d4f287686261bfa9
+      size: 4388
+    params:
+      configs/data.yaml:
+        csv_path:
+        id_column: customer_id
+        n_rows: 5000
+        schema_version: '1'
+        seed: 42
+        source: synthetic
+        target: churn
+    outs:
+    - path: data/raw
+      hash: md5
+      md5: 7bbc64596849c356b1f6637e3a5a93d2.dir
+      size: 360454
+      nfiles: 2
+  train:
+    cmd: uv run python -m churn_pipeline.train
+    deps:
+    - path: data/raw
+      hash: md5
+      md5: 7bbc64596849c356b1f6637e3a5a93d2.dir
+      size: 360454
+      nfiles: 2
+    - path: src/churn_pipeline
+      hash: md5
+      md5: a2223a9d42d83fc793422ac668150100.dir
+      size: 62677
+      nfiles: 16
+    params:
+      configs/data.yaml:
+        csv_path:
+        id_column: customer_id
+        n_rows: 5000
+        schema_version: '1'
+        seed: 42
+        source: synthetic
+        target: churn
+      configs/model.yaml:
+        baseline:
+          type: dummy_prior
+        candidate:
+          type: logistic_regression
+          params:
+            C: 1.0
+            max_iter: 1000
+            class_weight: balanced
+        decision_threshold: 0.5
+        gates:
+          min_roc_auc: 0.7
+          min_pr_auc: 0.4
+          min_recall: 0.5
+          min_roc_auc_lift_over_baseline: 0.05
+        seed: 42
+        test_size: 0.2
+    outs:
+    - path: models
+      hash: md5
+      md5: 6fe9710a46c680e26b02840ccc68fb4b.dir
+      size: 11036
+      nfiles: 2
+    - path: reports/metrics.json
+      hash: md5
+      md5: bea742f16d063a9d286d741f17466be5
+      size: 457
+    - path: reports/report.md
+      hash: md5
+      md5: 2d0c57b9efc007393b04b60a38d32a30
+      size: 568
+    - path: reports/split.json
+      hash: md5
+      md5: 4eba194067b5400463ecaedeaf8d68b3
+      size: 11014

@@ -4,7 +4,6 @@ import argparse
 import hashlib
 import json
 import logging
-from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
@@ -72,7 +71,7 @@ def fingerprint(df: pd.DataFrame) -> str:
 
 
 def build_provenance(df: pd.DataFrame, cfg: DataConfig) -> dict[str, Any]:
-    """Describe how the data was obtained. Timestamp excluded from the fingerprint on purpose."""
+    """Describe how the data was obtained. No timestamp: identical inputs give identical bytes."""
     method = (
         f"synthetic generator seed={cfg.seed} n_rows={cfg.n_rows}"
         if cfg.source == "synthetic"
@@ -85,7 +84,6 @@ def build_provenance(df: pd.DataFrame, cfg: DataConfig) -> dict[str, Any]:
         "row_count": len(df),
         "columns": list(df.columns),
         "schema_version": cfg.schema_version,
-        "created_utc": datetime.now(UTC).isoformat(timespec="seconds"),
     }
 
 

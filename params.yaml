@@ -1,6 +1,0 @@
-# DVC params: stage-level knobs. Full model/data settings live in configs/*.yaml.
-data:
-  seed: 42
-  n_rows: 5000
-train:
-  seed: 42
