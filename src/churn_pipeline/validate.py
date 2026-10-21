@@ -1,0 +1,98 @@
+"""Data contract: every rule is named so failures say exactly what broke. Nothing is dropped."""
+
+import argparse
+import logging
+import sys
+from pathlib import Path
+
+import pandas as pd
+import pandera.pandas as pa
+
+from churn_pipeline.ingest import CONTRACTS, INTERNET, PAYMENT
+
+log = logging.getLogger(__name__)
+
+MAX_TOTAL_CHARGES_MISSING = 0.01  # tolerated fraction of missing total_charges
+
+
+class DataValidationError(ValueError):
+    """Raised when data violates the contract; the message lists each failed rule."""
+
+
+def _no_dupes(name: str) -> pa.Check:
+    return pa.Check(lambda s: ~s.duplicated(keep=False), name=name, error=name)
+
+
+SCHEMA = pa.DataFrameSchema(
+    {
+        "customer_id": pa.Column(str, [_no_dupes("customer_id_unique")], nullable=False),
+        "gender": pa.Column(str, pa.Check.isin(["female", "male"]), nullable=False),
+        "senior_citizen": pa.Column(int, pa.Check.isin([0, 1]), nullable=False),
+        "partner": pa.Column(str, pa.Check.isin(["yes", "no"]), nullable=False),
+        "tenure_months": pa.Column(int, pa.Check.in_range(0, 120), nullable=False),
+        "contract": pa.Column(str, pa.Check.isin(CONTRACTS), nullable=False),
+        "internet_service": pa.Column(str, pa.Check.isin(INTERNET), nullable=False),
+        "payment_method": pa.Column(str, pa.Check.isin(PAYMENT), nullable=False),
+        "paperless_billing": pa.Column(str, pa.Check.isin(["yes", "no"]), nullable=False),
+        "monthly_charges": pa.Column(float, pa.Check.in_range(0, 500), nullable=False),
+        "total_charges": pa.Column(float, pa.Check.ge(0), nullable=True),
+        "churn": pa.Column(int, pa.Check.isin([0, 1]), nullable=False),
+    },
+    strict=True,  # unexpected extra columns fail instead of being silently ignored
+    coerce=False,
+    checks=[
+        pa.Check(
+            lambda df: ~((df["tenure_months"] == 0) & (df["total_charges"].fillna(0) > 0)),
+            name="no_charges_before_first_month",
+            error="no_charges_before_first_month",
+        ),
+        pa.Check(
+            lambda df: ~df.drop(columns="customer_id").duplicated(keep=False),
+            name="no_duplicate_rows_ignoring_id",
+            error="no_duplicate_rows_ignoring_id",
+        ),
+    ],
+)
+
+
+def validate(df: pd.DataFrame) -> pd.DataFrame:
+    """Return df unchanged if valid; otherwise raise DataValidationError naming each failed rule."""
+    if df.empty:
+        raise DataValidationError("rule 'non_empty': dataset has no rows")
+    try:
+        SCHEMA.validate(df, lazy=True)
+    except pa.errors.SchemaErrors as exc:
+        fails = exc.failure_cases
+        lines = [
+            f"rule {row.check!s} on column {row.column!s}: "
+            f"{row.failure_case!s} (row index {row.index!s})"
+            for row in fails.head(20).itertuples()
+        ]
+        more = len(fails) - len(lines)
+        suffix = f"\n... and {more} more failures" if more > 0 else ""
+        raise DataValidationError(
+            f"{len(fails)} contract violation(s):\n" + "\n".join(lines) + suffix
+        ) from exc
+    missing = float(df["total_charges"].isna().mean())
+    if missing > MAX_TOTAL_CHARGES_MISSING:
+        raise DataValidationError(
+            f"rule 'total_charges_missing_rate': {missing:.3f} exceeds {MAX_TOTAL_CHARGES_MISSING}"
+        )
+    return df
+
+
+def main() -> None:
+    parser = argparse.ArgumentParser(description="Validate a churn CSV against the contract.")
+    parser.add_argument("csv", type=Path)
+    args = parser.parse_args()
+    logging.basicConfig(level=logging.INFO, format="%(levelname)s %(name)s: %(message)s")
+    try:
+        validate(pd.read_csv(args.csv))
+    except DataValidationError as exc:
+        log.error("%s", exc)
+        sys.exit(1)
+    log.info("validation passed")
+
+
+if __name__ == "__main__":
+    main()
