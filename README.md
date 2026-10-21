@@ -98,10 +98,11 @@ These numbers describe the pipeline on invented data, not real-world churn perfo
 
 ## Reproducibility
 
-The raw data, provenance, split, metrics, report and serialized models were byte-identical across a forced
-re-run on the same machine; the dataset fingerprint and `raw.csv` matched between Windows and Docker
-(Linux). Other CPUs or library versions can change floating-point results in the last digits. MLflow run ids,
-timestamps and git SHA differ per run by design. See `docs/ARCHITECTURE.md`.
+A forced re-run on one machine reproduced every output hash. Across operating systems, the raw data,
+fingerprint, split, report and metrics matched (Windows vs Docker, and Windows vs the Linux CI run), but the
+pickled model files are not byte-identical, so compare models by metrics, not hash. Other CPUs or library
+versions can change floating-point results in the last digits. MLflow run ids, timestamps and git SHA differ
+per run by design. See `docs/ARCHITECTURE.md`.
 
 ## Limitations
 
