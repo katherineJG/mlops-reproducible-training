@@ -12,3 +12,7 @@ mlflow.db
 *.env
 .env*
 /models
+
+# local working notes, not part of the repo
+/AGENTS.md
+/Reproducible ML Training Pipeline Project.md

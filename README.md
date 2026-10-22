@@ -6,7 +6,7 @@ A reproducible, leakage-safe customer-churn training pipeline. The focus is engi
 novelty: validated data, preprocessing fitted only on training data, tracked experiments, versioned
 pipeline stages, and an evaluation gate that decides whether a candidate model is eligible.
 
-Spec: `Reproducible ML Training Pipeline Project.md`. Design notes: `docs/ARCHITECTURE.md`,
+Design notes: `docs/ARCHITECTURE.md`,
 `docs/DECISIONS.md`. Model details and limitations: `MODEL_CARD.md`. Failure demos: `docs/DEMOS.md`.
 
 ## Architecture

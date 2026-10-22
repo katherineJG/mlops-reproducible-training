@@ -7,7 +7,7 @@ Python 3.12 pinned everywhere (pyproject `requires-python`, `.python-version`, D
 - Optional path: real IBM Telco Churn CSV, **user-supplied/downloaded locally, never committed**. Licence is unconfirmed (see README data notes); personal, non-commercial use only.
 
 ## M0 — Setup
-Files: pyproject.toml (uv or pip-tools lock), Makefile, ruff/mypy/pytest config, AGENTS.md, docs/ARCHITECTURE.md, configs/{data,model}.yaml, params.yaml, empty package skeleton, CI stub.
+Files: pyproject.toml (uv or pip-tools lock), Makefile, ruff/mypy/pytest config, docs/ARCHITECTURE.md, configs/{data,model}.yaml, params.yaml, empty package skeleton, CI stub.
 Done when: `make lint typecheck test` run green on the empty skeleton.
 
 ## M1 — Ingestion and validation
