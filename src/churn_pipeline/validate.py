@@ -14,6 +14,9 @@ from churn_pipeline.ingest import CONTRACTS, INTERNET, PAYMENT
 log = logging.getLogger(__name__)
 
 MAX_TOTAL_CHARGES_MISSING = 0.01  # tolerated fraction of missing total_charges
+# Customers can legitimately share every feature (seen in real data: ~0.8% of rows), so identical
+# rows ignoring customer_id are counted and capped rather than rejected one by one.
+MAX_DUPLICATE_ROW_RATE = 0.02
 
 
 class DataValidationError(ValueError):
@@ -47,11 +50,6 @@ SCHEMA = pa.DataFrameSchema(
             name="no_charges_before_first_month",
             error="no_charges_before_first_month",
         ),
-        pa.Check(
-            lambda df: ~df.drop(columns="customer_id").duplicated(keep=False),
-            name="no_duplicate_rows_ignoring_id",
-            error="no_duplicate_rows_ignoring_id",
-        ),
     ],
 )
 
@@ -66,7 +64,6 @@ _EXPLANATIONS = [
     (r"^column_in_schema$", "column is not part of the contract (unexpected extra column)"),
     (r"^customer_id_unique$", "customer_id must be unique"),
     (r"^no_charges_before_first_month$", "tenure is 0 months but total charges are above 0"),
-    (r"^no_duplicate_rows_ignoring_id$", "row duplicates another row apart from customer_id"),
 ]
 
 
@@ -96,6 +93,18 @@ def validate(df: pd.DataFrame) -> pd.DataFrame:
         raise DataValidationError(
             f"{len(fails)} contract violation(s):\n" + "\n".join(lines) + suffix
         ) from exc
+    dup_rows = int(df.drop(columns="customer_id").duplicated(keep=False).sum())
+    if dup_rows:
+        log.warning(
+            "%d rows (%.2f%%) are identical apart from customer_id",
+            dup_rows,
+            100 * dup_rows / len(df),
+        )
+    if dup_rows / len(df) > MAX_DUPLICATE_ROW_RATE:
+        raise DataValidationError(
+            f"rule 'duplicate_row_rate': {dup_rows} of {len(df)} rows are identical apart from "
+            f"customer_id, above the {MAX_DUPLICATE_ROW_RATE:.0%} cap"
+        )
     missing = float(df["total_charges"].isna().mean())
     if missing > MAX_TOTAL_CHARGES_MISSING:
         raise DataValidationError(

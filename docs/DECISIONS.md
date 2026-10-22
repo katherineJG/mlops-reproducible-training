@@ -11,3 +11,6 @@
 | 7 | `numpy.dtype` is the only type trusted in MLflow's skops model serialization | MLflow 3 refuses untrusted types; trusting one named type is narrower than switching to pickle. |
 | 8 | `provenance.json` has no timestamp | Identical inputs must give byte-identical outputs; run time is already in the MLflow run. |
 | 9 | Run MLflow as `python -m mlflow` | On this Windows machine an Application Control policy blocks the `mlflow.exe` launcher. |
+| 10 | Identical rows (ignoring `customer_id`) are counted and capped at 2%, not rejected one by one | Found when validating the real IBM Telco data: 57 of 7043 rows (0.81%) are legitimately identical on the retained features. Duplicate `customer_id` still fails outright. |
+| 11 | `adapters.py` maps the IBM Telco CSV onto our schema; unmapped values are left visible so validation reports them | Private local testing only; the CSV has no confirmed license and is never committed. |
+| 12 | When local Windows blocks Python's `_multiprocessing` (Application Control), run checks and `dvc repro` in a `python:3.12-slim` container with the project mounted | Same Python version and locked deps as CI; also yields a Linux-built `dvc.lock` that matches CI's model hash. |

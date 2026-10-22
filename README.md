@@ -77,9 +77,13 @@ The default dataset is **synthetic**, generated deterministically from a seed (`
 third-party license to comply with. A 200-row sample is committed at `data/sample/churn_sample.csv`.
 The public IBM Telco churn CSV has no confirmed data license (IBM's sample repository licenses its code, not
 the CSV), so it is not committed or redistributed. To try it privately, set `source: csv` and `csv_path` in
-`configs/data.yaml`, with the file under `data/private/` (git-ignored). Its column names and values will need
-mapping to the schema in `validate.py` first (no mapping is provided yet); until then validation fails and
-lists the violated rules.
+`configs/data.yaml`, with the file under `data/private/` (git-ignored). Map it to our schema first:
+
+```bash
+uv run python -m churn_pipeline.adapters data/private/ibm/Telco-Customer-Churn.csv data/private/ibm/mapped.csv
+```
+
+The adapter logs the columns it drops and the blank `TotalCharges` values it converts to missing.
 
 ## Results
 

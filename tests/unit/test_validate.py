@@ -62,10 +62,18 @@ def test_duplicate_id_fails(df: pd.DataFrame) -> None:
         validate(df)
 
 
-def test_duplicate_row_fails(df: pd.DataFrame) -> None:
+def test_many_duplicate_rows_fail(df: pd.DataFrame) -> None:
+    dups = df.iloc[:20].assign(customer_id=[f"D{i}" for i in range(20)])
+    with pytest.raises(DataValidationError, match="duplicate_row_rate"):
+        validate(pd.concat([df, dups], ignore_index=True))
+
+
+def test_a_few_duplicate_rows_are_tolerated_and_counted(
+    df: pd.DataFrame, caplog: pytest.LogCaptureFixture
+) -> None:
     dup = df.iloc[[0]].assign(customer_id="C999999")
-    with pytest.raises(DataValidationError, match="no_duplicate_rows_ignoring_id"):
-        validate(pd.concat([df, dup], ignore_index=True))
+    validate(pd.concat([df, dup], ignore_index=True))
+    assert "identical apart from customer_id" in caplog.text
 
 
 def test_negative_charges_fail(df: pd.DataFrame) -> None:
